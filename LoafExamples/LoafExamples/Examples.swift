@@ -15,7 +15,7 @@ class Examples: UITableViewController {
         case success  = "An action was successfully completed"
         case error    = "An error has occured"
         case warning  = "A warning has occured"
-        case info     = "This is some information"
+        case info     = "This is some information which should be displayed in multiple raws!"
         
         case bottom   = "This will be shown at the bottom of the view"
         case top      = "This will be shown at the top of the view"
@@ -27,7 +27,7 @@ class Examples: UITableViewController {
         
         case custom1  = "This will showcase using custom colors and font"
         case custom2  = "This will showcase using right icon alignment"
-        case custom3  = "This will showcase using no icon and 80% screen size width"
+        case custom3  = "This will showcase using no icon and 90% screen size width"
 		
         static let grouped: [[Example]] = [[.success, .error, .warning, .info],
                                            [.bottom, .top],
@@ -51,9 +51,9 @@ class Examples: UITableViewController {
         tableView.backgroundColor                        = isDarkMode ? .groupTableViewBackground : .black
         
         if isDarkMode {
-            Loaf("Switched to light mode", state: .custom(.init(backgroundColor: .black, icon: UIImage(named: "moon"))), sender: self).show(.short)
+            Loaf("Switched to light mode", action: "Switch", style: .init(backgroundColor: .black, icon: UIImage(named: "moon")), sender: self).show(.short)
         } else {
-            Loaf("Switched to dark mode", state: .custom(.init(backgroundColor: .white, textColor: .black, tintColor: .black, icon: UIImage(named: "moon"))), sender: self).show(.short)
+            Loaf("Switched to dark mode", action: "Switch", style: .init(backgroundColor: .white, textColor: .black, tintColor: .black, icon: UIImage(named: "moon")), sender: self).show(.short)
         }
         
         tableView.reloadData()
@@ -79,39 +79,40 @@ class Examples: UITableViewController {
         let example = Example.grouped[indexPath.section][indexPath.row]
         switch example {
         case .success:
-            Loaf(example.rawValue, state: .success, sender: self).show()
+            Loaf(example.rawValue, action: "Action", style: .init(backgroundColor: .blue, width: .screenPercentage(0.9)), sender: self).show()
         case .error:
-            Loaf(example.rawValue, state: .error, sender: self).show()
+            Loaf(example.rawValue, action: "Action", style: .error, sender: self).show()
         case .warning:
-            Loaf(example.rawValue, state: .warning, sender: self).show()
+            Loaf(example.rawValue, action: "Action", style: .warning, sender: self).show()
         case .info:
-            Loaf(example.rawValue, state: .info, sender: self).show()
+            Loaf(example.rawValue, action: "Action", style: .default, sender: self).show()
             
         case .bottom:
-            Loaf(example.rawValue, sender: self).show { dismissalType in
+            Loaf(example.rawValue, action: "Action", sender: self).show { dismissalType in
                 switch dismissalType {
                 case .tapped: print("Tapped!")
+                case .performedAction: print("Action!")
                 case .timedOut: print("Timmed out!")
                 }
             }
         case .top:
-            Loaf(example.rawValue, location: .top, sender: self).show()
+            Loaf(example.rawValue, action: "Action", location: .top, sender: self).show()
             
         case .vertical:
-            Loaf(example.rawValue, sender: self).show(.short)
+            Loaf(example.rawValue, action: "Action", sender: self).show(.short)
         case .left:
-            Loaf(example.rawValue, presentingDirection: .left, dismissingDirection: .left, sender: self).show(.short)
+            Loaf(example.rawValue, action: "Action", presentingDirection: .left, dismissingDirection: .left, sender: self).show(.short)
         case .right:
-            Loaf(example.rawValue, presentingDirection: .right, dismissingDirection: .right, sender: self).show(.short)
+            Loaf(example.rawValue, action: "Action", presentingDirection: .right, dismissingDirection: .right, sender: self).show(.short)
         case .mix:
-            Loaf(example.rawValue, presentingDirection: .left, dismissingDirection: .vertical, sender: self).show(.short)
+            Loaf(example.rawValue, action: "Action", presentingDirection: .left, dismissingDirection: .vertical, sender: self).show(.short)
             
         case .custom1:
-            Loaf(example.rawValue, state: .custom(.init(backgroundColor: .purple, textColor: .yellow, tintColor: .green, font: .systemFont(ofSize: 18, weight: .bold), icon: Loaf.Icon.success)), sender: self).show()
+            Loaf(example.rawValue, action: "Action", style: .init(backgroundColor: .purple, textColor: .yellow, tintColor: .green, font: .systemFont(ofSize: 18, weight: .bold), icon: Icon.success), sender: self).show()
         case .custom2:
-            Loaf(example.rawValue, state: .custom(.init(backgroundColor: .purple, iconAlignment: .right)), sender: self).show()
+            Loaf(example.rawValue, action: "Action", style: .init(backgroundColor: .purple, contentAlignment: .rightToLeft), sender: self).show()
         case .custom3:
-            Loaf(example.rawValue, state: .custom(.init(backgroundColor: .black, icon: nil, textAlignment: .center, width: .screenPercentage(0.8))), sender: self).show()
+            Loaf(example.rawValue, action: "Action", style: .init(backgroundColor: .black, icon: nil, textAlignment: .center, width: .screenPercentage(0.9)), sender: self).show()
         }
         
         tableView.deselectRow(at: indexPath, animated: true)
@@ -126,4 +127,37 @@ class Examples: UITableViewController {
         let header = view as! UITableViewHeaderFooterView
         header.textLabel?.textColor = isDarkMode ? .white : .darkGray
     }
+}
+
+public extension Loaf.Style {
+    static let success = Loaf.Style(backgroundColor: UIColor(hexString: "#2ecc71"), icon: Icon.success)
+    static let warning = Loaf.Style(backgroundColor: UIColor(hexString: "#2ecc71"), icon: Icon.warning)
+    static let error = Loaf.Style(backgroundColor: UIColor(hexString: "#2ecc71"), icon: Icon.error)
+}
+
+extension UIColor {
+    convenience init(hexString: String) {
+        let hex = hexString.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
+        var int = UInt32()
+        Scanner(string: hex).scanHexInt32(&int)
+        let a, r, g, b: UInt32
+        switch hex.count {
+        case 3: // RGB (12-bit)
+            (a, r, g, b) = (255, (int >> 8) * 17, (int >> 4 & 0xF) * 17, (int & 0xF) * 17)
+        case 6: // RGB (24-bit)
+            (a, r, g, b) = (255, int >> 16, int >> 8 & 0xFF, int & 0xFF)
+        case 8: // ARGB (32-bit)
+            (a, r, g, b) = (int >> 24, int >> 16 & 0xFF, int >> 8 & 0xFF, int & 0xFF)
+        default:
+            (a, r, g, b) = (255, 0, 0, 0)
+        }
+        self.init(red: CGFloat(r) / 255, green: CGFloat(g) / 255, blue: CGFloat(b) / 255, alpha: CGFloat(a) / 255)
+    }
+}
+
+public enum Icon {
+    public static let success = Icons.imageOfSuccess().withRenderingMode(.alwaysTemplate)
+    public static let error = Icons.imageOfError().withRenderingMode(.alwaysTemplate)
+    public static let warning = Icons.imageOfWarning().withRenderingMode(.alwaysTemplate)
+    public static let info = Icons.imageOfInfo().withRenderingMode(.alwaysTemplate)
 }

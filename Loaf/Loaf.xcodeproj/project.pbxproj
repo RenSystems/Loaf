@@ -12,7 +12,6 @@
 		84DA601E234329880088680A /* Controller.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84DA6018234329880088680A /* Controller.swift */; };
 		84DA601F234329880088680A /* Animator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84DA6019234329880088680A /* Animator.swift */; };
 		84DA6020234329880088680A /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84DA601A234329880088680A /* Extensions.swift */; };
-		84DA6021234329880088680A /* Icons.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84DA601B234329880088680A /* Icons.swift */; };
 		84DA6022234329880088680A /* Loaf.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84DA601C234329880088680A /* Loaf.swift */; };
 /* End PBXBuildFile section */
 
@@ -24,7 +23,6 @@
 		84DA6018234329880088680A /* Controller.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Controller.swift; sourceTree = "<group>"; };
 		84DA6019234329880088680A /* Animator.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Animator.swift; sourceTree = "<group>"; };
 		84DA601A234329880088680A /* Extensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
-		84DA601B234329880088680A /* Icons.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Icons.swift; sourceTree = "<group>"; };
 		84DA601C234329880088680A /* Loaf.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Loaf.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -79,7 +77,6 @@
 			children = (
 				84DA6016234329880088680A /* Presenter */,
 				84DA601A234329880088680A /* Extensions.swift */,
-				84DA601B234329880088680A /* Icons.swift */,
 				84DA601C234329880088680A /* Loaf.swift */,
 			);
 			path = Loaf;
@@ -178,7 +175,6 @@
 				84DA6022234329880088680A /* Loaf.swift in Sources */,
 				84DA601D234329880088680A /* Manager.swift in Sources */,
 				84DA601E234329880088680A /* Controller.swift in Sources */,
-				84DA6021234329880088680A /* Icons.swift in Sources */,
 				84DA6020234329880088680A /* Extensions.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -238,7 +234,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -296,7 +292,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;

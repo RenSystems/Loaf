@@ -8,6 +8,11 @@
 
 import UIKit
 
+public extension Loaf.Style {
+    static let `default` = Loaf.Style(contentInsets: .init(top: 12, left: 14, bottom: 11, right: 17))
+}
+
+
 final public class Loaf {
     
     // MARK: - Specifiers
@@ -18,9 +23,9 @@ final public class Loaf {
         ///
         /// - left: The icon will be on the left of the text
         /// - right: The icon will be on the right of the text
-        public enum IconAlignment {
-            case left
-            case right
+        public enum ContentAlignment {
+            case leftToRight
+            case rightToLeft
         }
 		
         /// Specifies the width of the Loaf. (Default is `.fixed(280)`)
@@ -38,6 +43,9 @@ final public class Loaf {
         /// The color of the label's text
         let textColor: UIColor
         
+        /// The color of the button's title text
+        let actionButtonTextColor: UIColor
+        
         /// The color of the icon (Assuming it's rendered as template)
         let tintColor: UIColor
         
@@ -51,44 +59,35 @@ final public class Loaf {
         let textAlignment: NSTextAlignment
         
         /// The position of the icon
-        let iconAlignment: IconAlignment
+        let contentAlignment: ContentAlignment
 		
         /// The width of the loaf
         let width: Width
+        
+        let contentInsets: UIEdgeInsets
 		
         public init(
-            backgroundColor: UIColor,
+            backgroundColor: UIColor = .white,
             textColor: UIColor = .white,
             tintColor: UIColor = .white,
+            actionButtonTextColor: UIColor = .white,
             font: UIFont = .systemFont(ofSize: 14, weight: .medium),
-            icon: UIImage? = Icon.info,
+            icon: UIImage? = UIImage(systemName: "info.circle"),
             textAlignment: NSTextAlignment = .left,
-            iconAlignment: IconAlignment = .left,
-            width: Width = .fixed(280)) {
+            contentAlignment: ContentAlignment = .leftToRight,
+            width: Width = .screenPercentage(0.92),
+            contentInsets: UIEdgeInsets = .zero) {
             self.backgroundColor = backgroundColor
             self.textColor = textColor
             self.tintColor = tintColor
+            self.actionButtonTextColor = actionButtonTextColor
             self.font = font
             self.icon = icon
             self.textAlignment = textAlignment
-            self.iconAlignment = iconAlignment
+            self.contentAlignment = contentAlignment
             self.width = width
+            self.contentInsets = contentInsets
         }
-    }
-    
-    /// Defines the loaf's status. (Default is `.info`)
-    ///
-    /// - success: Represents a success message
-    /// - error: Represents an error message
-    /// - warning: Represents a warning message
-    /// - info: Represents an info message
-    /// - custom: Represents a custom loaf with a specified style.
-    public enum State {
-        case success
-        case error
-        case warning
-        case info
-        case custom(Style)
     }
     
     /// Defines the loaction to display the loaf. (Default is `.bottom`)
@@ -134,16 +133,9 @@ final public class Loaf {
         }
     }
     
-    /// Icons used in basic states
-    public enum Icon {
-        public static let success = Icons.imageOfSuccess().withRenderingMode(.alwaysTemplate)
-        public static let error = Icons.imageOfError().withRenderingMode(.alwaysTemplate)
-        public static let warning = Icons.imageOfWarning().withRenderingMode(.alwaysTemplate)
-        public static let info = Icons.imageOfInfo().withRenderingMode(.alwaysTemplate)
-    }
-    
     // Reason a Loaf was dismissed
     public enum DismissalReason {
+        case performedAction
         case tapped
         case timedOut
     }
@@ -151,7 +143,8 @@ final public class Loaf {
     // MARK: - Properties
     public typealias LoafCompletionHandler = ((DismissalReason) -> Void)?
     var message: String
-    var state: State
+    var action: String
+    var style: Style
     var location: Location
     var duration: Duration = .average
     var presentingDirection: Direction
@@ -161,13 +154,15 @@ final public class Loaf {
     
     // MARK: - Public methods
     public init(_ message: String,
-                state: State = .info,
-                location: Location = .bottom,
+                action: String,
+                style: Style = .default,
+                location: Location = .top,
                 presentingDirection: Direction = .vertical,
                 dismissingDirection: Direction = .vertical,
                 sender: UIViewController) {
         self.message = message
-        self.state = state
+        self.action = action
+        self.style = style
         self.location = location
         self.presentingDirection = presentingDirection
         self.dismissingDirection = dismissingDirection
@@ -188,7 +183,7 @@ final public class Loaf {
 	/// - Parameter animated: Whether the dismissal will be animated
 	public static func dismiss(sender: UIViewController, animated: Bool = true){
 		guard LoafManager.shared.isPresenting else { return }
-		guard let vc = sender.presentedViewController as? LoafViewController else { return }
+		guard let vc = sender.presentedViewController as? Notification else { return }
 		vc.dismiss(animated: animated) {
 			vc.delegate?.loafDidDismiss()
 		}
@@ -216,7 +211,7 @@ final fileprivate class LoafManager: LoafDelegate {
         isPresenting = true
         let loafVC = LoafViewController(loaf)
         loafVC.delegate = self
-        sender.presentToast(loafVC)
+        sender.present(loafVC)
     }
 }
 
@@ -224,145 +219,12 @@ protocol LoafDelegate: AnyObject {
     func loafDidDismiss()
 }
 
-final class LoafViewController: UIViewController {
-    var loaf: Loaf
-    
-    let label = UILabel()
-    let imageView = UIImageView(image: nil)
-    var font = UIFont.systemFont(ofSize: 14, weight: .medium)
-    var textAlignment: NSTextAlignment = .left
-    var transDelegate: UIViewControllerTransitioningDelegate
-    weak var delegate: LoafDelegate?
-    
-    init(_ toast: Loaf) {
-        self.loaf = toast
-        self.transDelegate = Manager(loaf: toast, size: .zero)
-        super.init(nibName: nil, bundle: nil)
-		
-        var width: CGFloat?
-        if case let Loaf.State.custom(style) = loaf.state {
-            self.font = style.font
-            self.textAlignment = style.textAlignment
-			
-            switch style.width {
-            case .fixed(let value):
-                width = value
-            case .screenPercentage(let percentage):
-                guard 0...1 ~= percentage else { return }
-                width = UIScreen.main.bounds.width * percentage
-            }
-        }
-        
-        let height = max(toast.message.heightWithConstrainedWidth(width: 240, font: font) + 12, 40)
-        preferredContentSize = CGSize(width: width ?? 280, height: height)
-    }
-    
-    required init?(coder aDecoder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        
-        label.text = loaf.message
-        label.numberOfLines = 0
-        label.lineBreakMode = .byWordWrapping
-        label.textColor = .white
-        label.font = font
-        label.textAlignment = textAlignment
-        label.setContentCompressionResistancePriority(.required, for: .vertical)
-        label.translatesAutoresizingMaskIntoConstraints = false
-        
-        imageView.tintColor = .white
-        imageView.contentMode = .scaleAspectFit
-        imageView.translatesAutoresizingMaskIntoConstraints = false
-        
-        switch loaf.state {
-        case .success:
-            imageView.image = Loaf.Icon.success
-            view.backgroundColor = UIColor(hexString: "#2ecc71")
-            constrainWithIconAlignment(.left)
-        case .warning:
-            imageView.image = Loaf.Icon.warning
-            view.backgroundColor = UIColor(hexString: "##f1c40f")
-            constrainWithIconAlignment(.left)
-        case .error:
-            imageView.image = Loaf.Icon.error
-            view.backgroundColor = UIColor(hexString: "##e74c3c")
-            constrainWithIconAlignment(.left)
-        case .info:
-            imageView.image = Loaf.Icon.info
-            view.backgroundColor = UIColor(hexString: "##34495e")
-            constrainWithIconAlignment(.left)
-        case .custom(style: let style):
-            imageView.image = style.icon
-            view.backgroundColor = style.backgroundColor
-            imageView.tintColor = style.tintColor
-            label.textColor = style.textColor
-            label.font = style.font
-            constrainWithIconAlignment(style.iconAlignment, showsIcon: imageView.image != nil)
-        }
-        
-        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleTap))
-        view.addGestureRecognizer(tapGesture)
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + loaf.duration.length, execute: {
-            self.dismiss(animated: true) { [weak self] in
-                self?.delegate?.loafDidDismiss()
-                self?.loaf.completionHandler?(.timedOut)
-            }
-        })
-    }
-    
-    @objc private func handleTap() {
-        dismiss(animated: true) { [weak self] in
-            self?.delegate?.loafDidDismiss()
-            self?.loaf.completionHandler?(.tapped)
-        }
-    }
-    
-    private func constrainWithIconAlignment(_ alignment: Loaf.Style.IconAlignment, showsIcon: Bool = true) {
-        view.addSubview(label)
-        
-        if showsIcon {
-            view.addSubview(imageView)
-            
-            switch alignment {
-            case .left:
-                NSLayoutConstraint.activate([
-                    imageView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 10),
-                    imageView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-                    imageView.heightAnchor.constraint(equalToConstant: 28),
-                    imageView.widthAnchor.constraint(equalToConstant: 28),
-                    
-                    label.leadingAnchor.constraint(equalTo: imageView.trailingAnchor, constant: 10),
-                    label.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -4),
-                    label.topAnchor.constraint(equalTo: view.topAnchor),
-                    label.bottomAnchor.constraint(equalTo: view.bottomAnchor)
-                ])
-            case .right:
-                NSLayoutConstraint.activate([
-                    imageView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -10),
-                    imageView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-                    imageView.heightAnchor.constraint(equalToConstant: 28),
-                    imageView.widthAnchor.constraint(equalToConstant: 28),
-                    
-                    label.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 10),
-                    label.trailingAnchor.constraint(equalTo: imageView.leadingAnchor, constant: -4),
-                    label.topAnchor.constraint(equalTo: view.topAnchor),
-                    label.bottomAnchor.constraint(equalTo: view.bottomAnchor)
-                ])
-            }
-        } else {
-            NSLayoutConstraint.activate([
-                label.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 10),
-                label.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -10),
-                label.topAnchor.constraint(equalTo: view.topAnchor),
-                label.bottomAnchor.constraint(equalTo: view.bottomAnchor)
-            ])
-        }
-    }
+protocol Notification {
+    init(_ toast: Loaf)
+    var delegate: LoafDelegate? { get set }
+    func dismiss(animated flag: Bool, completion: (() -> Void)?)
 }
+
 
 private struct Queue<T> {
     fileprivate var array = [T]()
@@ -380,3 +242,221 @@ private struct Queue<T> {
     }
 }
 
+final class LoafViewController: UIViewController, Notification {
+    
+    let loaf: Loaf
+    
+    let label = UILabel()
+    let imageView = UIImageView(image: nil)
+    var transDelegate: UIViewControllerTransitioningDelegate
+    var button = UIButton(type: .system)
+    
+    weak var delegate: LoafDelegate?
+    
+    init(_ toast: Loaf) {
+        self.loaf = toast
+        self.transDelegate = Manager(loaf: toast, size: .zero)
+        super.init(nibName: nil, bundle: nil)
+    }
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    private func updatePreferredContentSize() {
+        let size = view.systemLayoutSizeFitting(.init(width: width(for: loaf.style), height: .greatestFiniteMagnitude),
+                                     withHorizontalFittingPriority: .required, verticalFittingPriority: .fittingSizeLevel)
+        
+        self.preferredContentSize = size
+    }
+    
+    private func width(for style: Loaf.Style) -> CGFloat {
+        var width: CGFloat = UIScreen.main.bounds.width
+        
+        switch loaf.style.width {
+        case .fixed(let value):
+            width = value
+        case .screenPercentage(let percentage):
+            guard 0...1 ~= percentage else { return width }
+            width = width * percentage
+        }
+        
+        return width
+    }
+
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        button.setTitle(loaf.action, for: .normal)
+        button.setTitleColor(loaf.style.actionButtonTextColor, for: .normal)
+        
+        label.text = loaf.message
+        label.numberOfLines = 0
+        label.lineBreakMode = .byWordWrapping
+        label.textColor = .white
+        label.font = loaf.style.font
+        label.textColor = loaf.style.textColor
+        
+        label.textAlignment = loaf.style.textAlignment
+        label.setContentCompressionResistancePriority(.required, for: .vertical)
+        
+        imageView.tintColor = .white
+        imageView.contentMode = .scaleAspectFit
+        imageView.image = loaf.style.icon
+        imageView.tintColor = loaf.style.tintColor
+        
+        view.backgroundColor = loaf.style.backgroundColor
+        view.clipsToBounds = true
+        view.layer.cornerRadius = 14
+        buildShadowView()
+    
+        buildLayout(for: loaf.style.contentAlignment, contentInsets: loaf.style.contentInsets, showsIcon: imageView.image != nil)
+        updatePreferredContentSize()
+        
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleTap))
+        view.addGestureRecognizer(tapGesture)
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        dismissSelfAfter(loaf.duration.length)
+    }
+    
+    private func dismissSelfAfter(_ timeInterval: TimeInterval) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + timeInterval, execute: {
+            self.dismiss(animated: true) { [weak self] in
+                self?.delegate?.loafDidDismiss()
+                self?.loaf.completionHandler?(.timedOut)
+            }
+        })
+    }
+    
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        updatePreferredContentSize()
+    }
+    
+    @objc private func handleTap() {
+        dismiss(animated: true) { [weak self] in
+            self?.delegate?.loafDidDismiss()
+            self?.loaf.completionHandler?(.tapped)
+        }
+    }
+    
+    private func buildLayout(for contentAligment: Loaf.Style.ContentAlignment, contentInsets: UIEdgeInsets, showsIcon: Bool = true) {
+        let container = UIView()
+            container.translatesAutoresizingMaskIntoConstraints = false
+        
+        view.addSubview(container)
+        NSLayoutConstraint.activate([
+            container.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: contentInsets.left),
+            container.topAnchor.constraint(equalTo: view.topAnchor, constant: contentInsets.top),
+            container.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -contentInsets.right),
+            container.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -contentInsets.bottom),
+        ])
+       
+    
+        label.translatesAutoresizingMaskIntoConstraints = false
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.setContentCompressionResistancePriority(.required, for: .horizontal)
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+
+        container.addSubview(label)
+        container.addSubview(button)
+        
+        if showsIcon {
+            container.addSubview(imageView)
+        }
+
+        switch contentAligment {
+        case .leftToRight:
+            
+            if showsIcon {
+                NSLayoutConstraint.activate([
+                    imageView.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+                    imageView.centerYAnchor.constraint(equalTo: container.centerYAnchor),
+                    imageView.heightAnchor.constraint(equalToConstant: 24),
+                    imageView.widthAnchor.constraint(equalToConstant: 24)
+                ])
+            }
+            
+            if showsIcon {
+                label.leadingAnchor.constraint(equalTo: imageView.trailingAnchor, constant: 13).isActive = true
+            }else {
+                label.leadingAnchor.constraint(equalTo: container.leadingAnchor).isActive = true
+            }
+            
+            NSLayoutConstraint.activate([
+                label.trailingAnchor.constraint(lessThanOrEqualTo: button.leadingAnchor, constant: -8),
+                label.topAnchor.constraint(equalTo: container.topAnchor, constant: 4.5),
+                label.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -4.5),
+                button.centerYAnchor.constraint(equalTo: container.centerYAnchor),
+                button.trailingAnchor.constraint(equalTo: container.trailingAnchor)
+            ])
+        
+        case .rightToLeft:
+            
+            NSLayoutConstraint.activate([
+                button.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+                button.centerYAnchor.constraint(equalTo: container.centerYAnchor),
+
+                label.leadingAnchor.constraint(lessThanOrEqualTo: button.trailingAnchor, constant: -8),
+                label.topAnchor.constraint(equalTo: container.topAnchor, constant: 4.5),
+                label.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -4.5)
+            ])
+            
+            if showsIcon {
+                label.trailingAnchor.constraint(equalTo: imageView.leadingAnchor, constant: -13).isActive = true
+            }else {
+                label.trailingAnchor.constraint(equalTo: container.trailingAnchor).isActive = true
+            }
+            
+            if showsIcon {
+                NSLayoutConstraint.activate([
+                    imageView.trailingAnchor.constraint(equalTo: container.trailingAnchor),
+                    imageView.centerYAnchor.constraint(equalTo: container.centerYAnchor),
+                    imageView.heightAnchor.constraint(equalToConstant: 24),
+                    imageView.widthAnchor.constraint(equalToConstant: 24)
+                ])
+            }
+        }
+    }
+
+
+    private func buildShadowView() {
+        
+        let shadows = UIView()
+        shadows.frame = view.frame
+        shadows.clipsToBounds = false
+
+        view.addSubview(shadows)
+
+        let shadowPath0 = UIBezierPath(roundedRect: shadows.bounds, cornerRadius: 14)
+
+        let layer0 = CALayer()
+            layer0.shadowPath = shadowPath0.cgPath
+            layer0.shadowColor = UIColor(red: 0, green: 0, blue: 0, alpha: 0.1).cgColor
+            layer0.shadowOpacity = 1
+            layer0.shadowRadius = 4
+            layer0.shadowOffset = CGSize(width: 0, height: 1)
+            layer0.bounds = shadows.bounds
+            layer0.position = shadows.center
+
+        shadows.layer.addSublayer(layer0)
+
+
+        let shadowPath1 = UIBezierPath(roundedRect: shadows.bounds, cornerRadius: 14)
+
+        let layer1 = CALayer()
+            layer1.shadowPath = shadowPath1.cgPath
+            layer1.shadowColor = UIColor(red: 0, green: 0, blue: 0, alpha: 0.11).cgColor
+            layer1.shadowOpacity = 1
+            layer1.shadowRadius = 6
+            layer1.shadowOffset = CGSize(width: 0, height: 2)
+            layer1.bounds = shadows.bounds
+            layer1.position = shadows.center
+
+
+        shadows.layer.addSublayer(layer1)
+    }
+}
