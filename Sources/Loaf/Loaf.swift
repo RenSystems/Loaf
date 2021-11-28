@@ -27,7 +27,7 @@ final public class Loaf {
             case leftToRight
             case rightToLeft
         }
-		
+        
         /// Specifies the width of the Loaf. (Default is `.fixed(280)`)
         ///
         /// - fixed: Specified as pixel size. i.e. 280
@@ -60,12 +60,12 @@ final public class Loaf {
         
         /// The position of the icon
         let contentAlignment: ContentAlignment
-		
+        
         /// The width of the loaf
         let width: Width
         
         let contentInsets: UIEdgeInsets
-		
+        
         public init(
             backgroundColor: UIColor = .white,
             textColor: UIColor = .white,
@@ -177,17 +177,17 @@ final public class Loaf {
         self.completionHandler = completionHandler
         LoafManager.shared.queueAndPresent(self)
     }
-	
-	/// Manually dismiss a currently presented Loaf
-	///
-	/// - Parameter animated: Whether the dismissal will be animated
-	public static func dismiss(sender: UIViewController, animated: Bool = true){
-		guard LoafManager.shared.isPresenting else { return }
-		guard let vc = sender.presentedViewController as? Notification else { return }
-		vc.dismiss(animated: animated) {
-			vc.delegate?.loafDidDismiss()
-		}
-	}
+    
+    /// Manually dismiss a currently presented Loaf
+    ///
+    /// - Parameter animated: Whether the dismissal will be animated
+    public static func dismiss(sender: UIViewController, animated: Bool = true){
+        guard LoafManager.shared.isPresenting else { return }
+        guard let vc = sender.presentedViewController as? Notification else { return }
+        vc.dismiss(animated: animated) {
+            vc.delegate?.loafDidDismiss()
+        }
+    }
 }
 
 final fileprivate class LoafManager: LoafDelegate {
@@ -289,6 +289,7 @@ final class LoafViewController: UIViewController, Notification {
         
         button.setTitle(loaf.action, for: .normal)
         button.setTitleColor(loaf.style.actionButtonTextColor, for: .normal)
+        button.addTarget(self, action: #selector(handleButtonAction), for: .touchUpInside)
         
         label.text = loaf.message
         label.numberOfLines = 0
@@ -300,15 +301,27 @@ final class LoafViewController: UIViewController, Notification {
         label.textAlignment = loaf.style.textAlignment
         label.setContentCompressionResistancePriority(.required, for: .vertical)
         
-        imageView.tintColor = .white
         imageView.contentMode = .scaleAspectFit
         imageView.image = loaf.style.icon
         imageView.tintColor = loaf.style.tintColor
         
+        
+        let blurView = UIVisualEffectView(effect: UIBlurEffect(style: .systemMaterial))
+        blurView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(blurView)
         view.backgroundColor = loaf.style.backgroundColor
         view.clipsToBounds = true
         view.layer.cornerRadius = 14
         buildShadowView()
+    
+    
+        NSLayoutConstraint.activate([
+            blurView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            blurView.topAnchor.constraint(equalTo: view.topAnchor),
+            blurView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            blurView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+        ])
+       
     
         buildLayout(for: loaf.style.contentAlignment, contentInsets: loaf.style.contentInsets, showsIcon: imageView.image != nil)
         updatePreferredContentSize()
@@ -329,6 +342,14 @@ final class LoafViewController: UIViewController, Notification {
                 self?.loaf.completionHandler?(.timedOut)
             }
         })
+    }
+    
+    @objc
+    private func handleButtonAction() {
+        self.dismiss(animated: true) { [weak self] in
+            self?.delegate?.loafDidDismiss()
+            self?.loaf.completionHandler?(.performedAction)
+        }
     }
     
     override func viewDidLayoutSubviews() {
@@ -425,13 +446,7 @@ final class LoafViewController: UIViewController, Notification {
 
     private func buildShadowView() {
         
-        let shadows = UIView()
-        shadows.frame = view.frame
-        shadows.clipsToBounds = false
-
-        view.addSubview(shadows)
-
-        let shadowPath0 = UIBezierPath(roundedRect: shadows.bounds, cornerRadius: 14)
+        let shadowPath0 = UIBezierPath(roundedRect: self.view.bounds, cornerRadius: 14)
 
         let layer0 = CALayer()
             layer0.shadowPath = shadowPath0.cgPath
@@ -439,13 +454,13 @@ final class LoafViewController: UIViewController, Notification {
             layer0.shadowOpacity = 1
             layer0.shadowRadius = 4
             layer0.shadowOffset = CGSize(width: 0, height: 1)
-            layer0.bounds = shadows.bounds
-            layer0.position = shadows.center
+            layer0.bounds = self.view.bounds
+            layer0.position = self.view.center
 
-        shadows.layer.addSublayer(layer0)
+        view.layer.addSublayer(layer0)
 
 
-        let shadowPath1 = UIBezierPath(roundedRect: shadows.bounds, cornerRadius: 14)
+        let shadowPath1 = UIBezierPath(roundedRect: self.view.bounds, cornerRadius: 14)
 
         let layer1 = CALayer()
             layer1.shadowPath = shadowPath1.cgPath
@@ -453,10 +468,10 @@ final class LoafViewController: UIViewController, Notification {
             layer1.shadowOpacity = 1
             layer1.shadowRadius = 6
             layer1.shadowOffset = CGSize(width: 0, height: 2)
-            layer1.bounds = shadows.bounds
-            layer1.position = shadows.center
+            layer1.bounds = self.view.bounds
+            layer1.position = self.view.center
 
 
-        shadows.layer.addSublayer(layer1)
+        view.layer.addSublayer(layer1)
     }
 }
