@@ -46,11 +46,15 @@ final public class Loaf {
         /// The color of the button's title text
         let actionButtonTextColor: UIColor
         
+        /// The font of the button title
+        let actionButtonFont: UIFont
+        
         /// The color of the icon (Assuming it's rendered as template)
         let tintColor: UIColor
         
         /// The font of the label
         let font: UIFont
+        
         
         /// The icon on the loaf
         let icon: UIImage?
@@ -71,6 +75,7 @@ final public class Loaf {
             textColor: UIColor = .white,
             tintColor: UIColor = .white,
             actionButtonTextColor: UIColor = .white,
+            actionButtonFont: UIFont = .systemFont(ofSize: 14, weight: .medium),
             font: UIFont = .systemFont(ofSize: 14, weight: .medium),
             icon: UIImage? = UIImage(systemName: "info.circle"),
             textAlignment: NSTextAlignment = .left,
@@ -81,6 +86,7 @@ final public class Loaf {
             self.textColor = textColor
             self.tintColor = tintColor
             self.actionButtonTextColor = actionButtonTextColor
+            self.actionButtonFont = actionButtonFont
             self.font = font
             self.icon = icon
             self.textAlignment = textAlignment
@@ -289,6 +295,7 @@ final class LoafViewController: UIViewController, Notification {
         
         button.setTitle(loaf.action, for: .normal)
         button.setTitleColor(loaf.style.actionButtonTextColor, for: .normal)
+        button.titleLabel?.font = loaf.style.actionButtonFont
         button.addTarget(self, action: #selector(handleButtonAction), for: .touchUpInside)
         
         label.text = loaf.message
