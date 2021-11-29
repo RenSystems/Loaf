@@ -306,14 +306,18 @@ final class LoafViewController: UIViewController, Notification {
         imageView.tintColor = loaf.style.tintColor
         
         
-        let blurView = UIVisualEffectView(effect: UIBlurEffect(style: .systemMaterial))
+        let blurView = UIVisualEffectView(effect: UIBlurEffect(style: .systemUltraThinMaterialLight))
         blurView.translatesAutoresizingMaskIntoConstraints = false
+        blurView.clipsToBounds = true
+        blurView.layer.cornerRadius = 14
+        blurView.layer.cornerCurve = .continuous
+        
         view.addSubview(blurView)
         view.backgroundColor = loaf.style.backgroundColor
-        view.clipsToBounds = true
-        view.layer.cornerRadius = 14
-        buildShadowView()
-    
+        view.layer.shadowColor = UIColor.black.cgColor
+        view.layer.shadowOpacity = 0.15
+        view.layer.shadowRadius = 2
+        view.layer.shadowOffset = CGSize(width: 0, height: 1)
     
         NSLayoutConstraint.activate([
             blurView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
@@ -441,37 +445,5 @@ final class LoafViewController: UIViewController, Notification {
                 ])
             }
         }
-    }
-
-
-    private func buildShadowView() {
-        
-        let shadowPath0 = UIBezierPath(roundedRect: self.view.bounds, cornerRadius: 14)
-
-        let layer0 = CALayer()
-            layer0.shadowPath = shadowPath0.cgPath
-            layer0.shadowColor = UIColor(red: 0, green: 0, blue: 0, alpha: 0.1).cgColor
-            layer0.shadowOpacity = 1
-            layer0.shadowRadius = 4
-            layer0.shadowOffset = CGSize(width: 0, height: 1)
-            layer0.bounds = self.view.bounds
-            layer0.position = self.view.center
-
-        view.layer.addSublayer(layer0)
-
-
-        let shadowPath1 = UIBezierPath(roundedRect: self.view.bounds, cornerRadius: 14)
-
-        let layer1 = CALayer()
-            layer1.shadowPath = shadowPath1.cgPath
-            layer1.shadowColor = UIColor(red: 0, green: 0, blue: 0, alpha: 0.11).cgColor
-            layer1.shadowOpacity = 1
-            layer1.shadowRadius = 6
-            layer1.shadowOffset = CGSize(width: 0, height: 2)
-            layer1.bounds = self.view.bounds
-            layer1.position = self.view.center
-
-
-        view.layer.addSublayer(layer1)
     }
 }
