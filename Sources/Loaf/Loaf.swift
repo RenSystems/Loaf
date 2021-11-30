@@ -321,16 +321,28 @@ final class LoafViewController: UIViewController, Notification {
         
         view.addSubview(blurView)
         view.backgroundColor = loaf.style.backgroundColor
-        view.layer.shadowColor = UIColor.black.cgColor
-        view.layer.shadowOpacity = 0.15
-        view.layer.shadowRadius = 2
-        view.layer.shadowOffset = CGSize(width: 0, height: 1)
+        
+        let shadowView = MultiShadowView(frame: .zero)
+        shadowView.translatesAutoresizingMaskIntoConstraints = false
+        shadowView.layer.cornerCurve = .continuous
+        shadowView.layer.cornerRadius = 14
+        view.insertSubview(shadowView, at: 0)
+
+        shadowView.shadows = [
+            .init(color: .black, radius: 4, offset: .init(x: 0, y: 1), opacity: 0.1),
+            .init(color: .black, radius: 6, offset: .init(x: 0, y: 2), opacity: 0.11),
+        ]
     
         NSLayoutConstraint.activate([
             blurView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             blurView.topAnchor.constraint(equalTo: view.topAnchor),
             blurView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             blurView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            
+            shadowView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            shadowView.topAnchor.constraint(equalTo: view.topAnchor),
+            shadowView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            shadowView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
         ])
        
     
@@ -451,6 +463,76 @@ final class LoafViewController: UIViewController, Notification {
                     imageView.widthAnchor.constraint(equalToConstant: 24)
                 ])
             }
+        }
+    }
+}
+
+
+class MultiShadowView: UIView {
+    struct Shadow {
+        let color: UIColor
+        let radius: CGFloat
+        let offset: CGPoint
+        let opacity: CGFloat
+    }
+    
+    override var bounds: CGRect {
+        didSet {
+            layer.mask = makeCutoutMask(maxRadius: maxShadowRadius, maxOffset: maxShadowOffset)
+        }
+    }
+    
+    var shadows: [Shadow] = [] {
+        didSet {
+            layer.sublayers?.forEach { $0.removeFromSuperlayer() }
+            for shadow in shadows {
+                let sublayer = makeSublayer(for: shadow)
+                layer.addSublayer(sublayer)
+            }
+        }
+    }
+    
+    private var maxShadowOffset: CGPoint {
+        shadows.reduce(into: CGPoint(x: 0, y: 0)) { memo, shadow in
+            memo.x = max(shadow.offset.x, memo.x)
+            memo.y = max(shadow.offset.y, memo.y)
+        }
+    }
+    
+    private var maxShadowRadius: CGFloat {
+        shadows.max { $0.radius < $1.radius }?.radius ?? 0.0
+    }
+    
+    private func makeSublayer(for shadow: Shadow) -> CALayer {
+        let layer = CALayer()
+        // XXX: do not set layer.delegate = self, this will cause a crash during VC transitions
+        layer.shadowColor = shadow.color.cgColor
+        layer.shadowRadius = shadow.radius
+        layer.shadowOffset = CGSize(width: shadow.offset.x, height: shadow.offset.y)
+        layer.shadowOpacity = Float(shadow.opacity)
+        return layer
+    }
+    
+    /// Creates a `CAShapeLayer` that excludes the layer's background from the drawn shadows.
+    private func makeCutoutMask(maxRadius radius: CGFloat, maxOffset offset: CGPoint) -> CAShapeLayer {
+        let maskLayer = CAShapeLayer()
+        let path = CGMutablePath()
+        path.addPath(UIBezierPath(roundedRect: bounds, cornerRadius: layer.cornerRadius).cgPath)
+        
+        let shadowSize = CGSize(width: offset.x + radius*2, height: offset.y + radius*2)
+        let boundsPlusShadow = bounds.inset(by: .init(top: -shadowSize.height, left: -shadowSize.width, bottom: -shadowSize.height, right: -shadowSize.width))
+        path.addPath(UIBezierPath(roundedRect: boundsPlusShadow, cornerRadius: radius).cgPath)
+        maskLayer.backgroundColor = UIColor.black.cgColor
+        maskLayer.path = path
+        maskLayer.fillRule = .evenOdd
+        return maskLayer
+    }
+    
+    override func layoutSublayers(of layer: CALayer) {
+        let shadowPath = UIBezierPath(roundedRect: layer.bounds, cornerRadius: layer.cornerRadius).cgPath
+        layer.sublayers?.forEach {
+            $0.frame = layer.bounds
+            $0.shadowPath = shadowPath
         }
     }
 }
