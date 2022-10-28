@@ -14,7 +14,7 @@ extension UIViewController {
         notification.transDelegate = Manager(loaf: notification.loaf, size: notification.preferredContentSize)
         notification.transitioningDelegate = notification.transDelegate
         notification.modalPresentationStyle = .custom
-        present(notification, animated: true)
+        present(notification, animated: notification.loaf.presentingAnimated)
     }
 }
 

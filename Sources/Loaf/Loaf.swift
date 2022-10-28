@@ -153,8 +153,10 @@ final public class Loaf {
     var style: Style
     var location: Location
     var duration: Duration = .average
+    var presentingAnimated: Bool = true
     var presentingDirection: Direction
     var dismissingDirection: Direction
+
     var completionHandler: LoafCompletionHandler = nil
     weak var sender: UIViewController?
     
@@ -178,8 +180,9 @@ final public class Loaf {
     /// Show the loaf for a specified duration. (Default is `.average`)
     ///
     /// - Parameter duration: Length the loaf will be presented
-    public func show(_ duration: Duration = .average, completionHandler: LoafCompletionHandler = nil) {
+    public func show(_ duration: Duration = .average, animated: Bool, completionHandler: LoafCompletionHandler = nil) {
         self.duration = duration
+        self.presentingAnimated = animated
         self.completionHandler = completionHandler
         LoafManager.shared.queueAndPresent(self)
     }
