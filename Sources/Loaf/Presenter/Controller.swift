@@ -34,15 +34,20 @@ final class Controller: UIPresentationController {
         guard let containerView = containerView else { return }
 
         var containerInsets: UIEdgeInsets
-        if #available(iOS 11, *) {
-            containerInsets = containerView.safeAreaInsets
+        
+        if loaf.style.contentOffset != .zero {
+            containerInsets = loaf.style.contentOffset
         } else {
-            let statusBarSize = UIApplication.shared.statusBarFrame.size
-            containerInsets = UIEdgeInsets(top: min(statusBarSize.width, statusBarSize.height), left: 0, bottom: 0, right: 0)
-        }
-
-        if let tabBar = loaf.sender?.parent as? UITabBarController{
-            containerInsets.bottom += tabBar.tabBar.frame.height
+            if #available(iOS 11, *) {
+                containerInsets = containerView.safeAreaInsets
+            } else {
+                let statusBarSize = UIApplication.shared.statusBarFrame.size
+                containerInsets = UIEdgeInsets(top: min(statusBarSize.width, statusBarSize.height), left: 0, bottom: 0, right: 0)
+            }
+            
+            if let tabBar = loaf.sender?.parent as? UITabBarController{
+                containerInsets.bottom += tabBar.tabBar.frame.height
+            }
         }
 
         let prettyfierInset = CGFloat(10)

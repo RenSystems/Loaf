@@ -69,6 +69,7 @@ final public class Loaf {
         let width: Width
         
         let contentInsets: UIEdgeInsets
+        let contentOffset: UIEdgeInsets
         
         public init(
             backgroundColor: UIColor = .white,
@@ -81,7 +82,8 @@ final public class Loaf {
             textAlignment: NSTextAlignment = .left,
             contentAlignment: ContentAlignment = .leftToRight,
             width: Width = .screenPercentage(0.92),
-            contentInsets: UIEdgeInsets = .zero) {
+            contentInsets: UIEdgeInsets = .zero,
+            contentOffset: UIEdgeInsets = .zero) {
             self.backgroundColor = backgroundColor
             self.textColor = textColor
             self.tintColor = tintColor
@@ -93,6 +95,7 @@ final public class Loaf {
             self.contentAlignment = contentAlignment
             self.width = width
             self.contentInsets = contentInsets
+            self.contentOffset = contentOffset
         }
     }
     
@@ -180,7 +183,7 @@ final public class Loaf {
     /// Show the loaf for a specified duration. (Default is `.average`)
     ///
     /// - Parameter duration: Length the loaf will be presented
-    public func show(_ duration: Duration = .average, animated: Bool, completionHandler: LoafCompletionHandler = nil) {
+    public func show(_ duration: Duration = .average, animated: Bool = true, completionHandler: LoafCompletionHandler = nil) {
         self.duration = duration
         self.presentingAnimated = animated
         self.completionHandler = completionHandler
