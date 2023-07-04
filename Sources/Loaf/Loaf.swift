@@ -286,7 +286,7 @@ final class LoafViewController: UIViewController, Notification {
     }
     
     private func width(for style: Loaf.Style) -> CGFloat {
-//        var width: CGFloat = view.window?.bounds.width ?? UIScreen.main.bounds.width
+        var width: CGFloat = view.window?.bounds.width ?? UIScreen.main.bounds.width
         
         switch loaf.style.width {
         case .fixed(let value):
