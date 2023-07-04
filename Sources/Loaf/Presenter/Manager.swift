@@ -10,10 +10,10 @@ import UIKit
 
 final class Manager: NSObject, UIViewControllerTransitioningDelegate {
     private let loaf: Loaf
-    private let size: CGSize
+    private let size: () -> CGSize
     var animator: Animator
     
-    init(loaf: Loaf, size: CGSize) {
+    init(loaf: Loaf, size: @escaping () -> CGSize) {
         self.loaf = loaf
         self.size = size
         self.animator = Animator(duration: 0.4, loaf: loaf, size: size)

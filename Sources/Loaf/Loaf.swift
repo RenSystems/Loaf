@@ -271,7 +271,7 @@ final class LoafViewController: UIViewController, Notification {
     
     init(_ toast: Loaf) {
         self.loaf = toast
-        self.transDelegate = Manager(loaf: toast, size: .zero)
+        self.transDelegate = Manager(loaf: toast, size: { .zero })
         super.init(nibName: nil, bundle: nil)
     }
     required init?(coder aDecoder: NSCoder) {
@@ -286,7 +286,7 @@ final class LoafViewController: UIViewController, Notification {
     }
     
     private func width(for style: Loaf.Style) -> CGFloat {
-        var width: CGFloat = UIScreen.main.bounds.width
+//        var width: CGFloat = view.window?.bounds.width ?? UIScreen.main.bounds.width
         
         switch loaf.style.width {
         case .fixed(let value):
@@ -373,6 +373,11 @@ final class LoafViewController: UIViewController, Notification {
         }
     }
     
+    override func viewWillLayoutSubviews() {
+        super.viewWillLayoutSubviews()
+        updatePreferredContentSize()
+    }
+
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         updatePreferredContentSize()

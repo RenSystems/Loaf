@@ -11,7 +11,11 @@ import UIKit
 extension UIViewController {
     func present(_ notification: LoafViewController) {
         notification.loadViewIfNeeded()
-        notification.transDelegate = Manager(loaf: notification.loaf, size: notification.preferredContentSize)
+        notification.transDelegate = Manager(
+            loaf: notification.loaf,
+            size: { [weak notification] in
+                notification?.preferredContentSize ?? .zero
+            })
         notification.transitioningDelegate = notification.transDelegate
         notification.modalPresentationStyle = .custom
         present(notification, animated: notification.loaf.presentingAnimated)

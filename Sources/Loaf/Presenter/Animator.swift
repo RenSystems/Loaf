@@ -12,9 +12,9 @@ final class Animator: NSObject {
     var presenting: Bool!
     private let loaf: Loaf
     private let duration: TimeInterval
-    private let size: CGSize
+    private let size: () -> CGSize
     
-    init(duration: TimeInterval, loaf: Loaf, size: CGSize) {
+    init(duration: TimeInterval, loaf: Loaf, size: @escaping () -> CGSize) {
         self.duration = duration
         self.loaf = loaf
         self.size = size
@@ -40,7 +40,7 @@ extension Animator: UIViewControllerAnimatedTransitioning {
         
         switch presenting ? loaf.presentingDirection : loaf.dismissingDirection {
         case .vertical:
-            dismissedFrame.origin.y = (loaf.location == .bottom) ? controller.view.frame.height + 60 : -size.height - 60
+            dismissedFrame.origin.y = (loaf.location == .bottom) ? controller.view.frame.height + 60 : -size().height - 60
         case .left:
             dismissedFrame.origin.x = -controller.view.frame.width * 2
         case .right:

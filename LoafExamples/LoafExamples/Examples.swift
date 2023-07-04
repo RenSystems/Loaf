@@ -112,7 +112,7 @@ class Examples: UITableViewController {
         case .custom2:
             Loaf(example.rawValue, action: "Action", style: .init(backgroundColor: .purple, contentAlignment: .rightToLeft), sender: self).show()
         case .custom3:
-            Loaf(example.rawValue, action: "Action", style: .init(backgroundColor: .black, icon: nil, textAlignment: .center, width: .screenPercentage(0.9), contentOffset: view.safeAreaInsets), sender: self).show()
+            Loaf(example.rawValue, action: "Action", style: .init(backgroundColor: .black, icon: nil, textAlignment: .center, width: .screenPercentage(0.9), contentOffset: view.safeAreaInsets), sender: self).show(.custom(10000))
         }
         
         tableView.deselectRow(at: indexPath, animated: true)
